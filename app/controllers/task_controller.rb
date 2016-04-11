@@ -17,11 +17,14 @@ class TaskController < ApplicationController
     @taskdo = task2.where(:team_id => params[:team])
     @tasklist = @taskdo.order(duedate: :asc)
     @tasklistdesc = @taskdo.order(duedate: :desc)
+    @team = Team.find(params[:team])
   end
   
   def entire
-      @managelist = Task.order(duedate: :asc)
-      @managelistdesc = Task.order(duedate: :desc)
+    @managelist = Task.order(duedate: :asc)
+    @managelistdesc = Task.order(duedate: :desc)
+    @team = Team.find(params[:team])
+    @teamtask = Task.where(:team_id => params[:team])
   end
   
   def wansungdo_update

@@ -2,6 +2,7 @@
 	<h1> task viewer </h1>
 	<h2> <%=current_user.first_name%><%=current_user.last_name%> <%=current_user.email%> </h2>
 	<a href="/task/entire"> entire </a>
+	<%= link_to "ENTIRE", action: 'entire', controller: 'task', team: @team.id%>
 </head>
 <h4>너가 시킨 일</h4>
 <% @tasksend.each do |tasksend| %>
@@ -41,28 +42,147 @@
 	<br>
 	<br>
 	<li> <%= link_to('Logout', destroy_user_session_path, :method => :delete) %> </li>
-	<!--<script src="/assets/tasklist_index.js"></script>-->
+	
 	<script>
+		// request permission on page load
+		document.addEventListener('DOMContentLoaded', function () {
+		  if (Notification.permission !== "granted")
+		    Notification.requestPermission();
+		});
+		
+		function notifyMe() {
+		  if (!Notification) {
+		    alert('Desktop notifications not available in your browser. Try Chromium.'); 
+		    return;
+		  }
+		
+		  if (Notification.permission !== "granted")
+		    Notification.requestPermission();
+		  else {
+		    var notification = new Notification('Notification title', {
+		      icon: 'http://cdn.sstatic.net/stackexchange/img/logos/so/so-icon.png',
+		      body: "Hey there! You've been notified!",
+		    });
+		
+		    notification.onclick = function () {
+		      window.open("http://stackoverflow.com/a/13328397/1269037");      
+		    };
+		  }
+		}
+	</script>
+	<button onclick="notifyMe()">Notify me!</button>
 
-
+	<script>
 		var labelString = new Array();
 		var dataString = new Array();
 		var barChartData = first(labelString, dataString);
 
 		<% @tasklistdesc.each do |t| %>
-				var displayday = <%=(t.duedate - Date.today).to_i %>
+				var displayday = <%=(t.wansungdo).to_i %>
 				if(displayday >= 0){
 				barChartData.labels.push("<%=t.taskname%>");
 					dataString.push(displayday);
 				}
 		<% end %>
-
 		onld(barChartData);
-
-
 	</script>
-
-
 	<canvas id="canvas" width="auto" height="auto" style="max-width: 1200px; max-height: 500px;" ></canvas>
+	
+	<style>
+		abc, tr, td{
+			border-bottom: 2px solid #707070;
+		}
+		abc, th {
+    	height: 30px;
+		}
+		abc{
+			 margin=10px;
+		}
 
+		@keyframes slidein {
+		  from {
+		    background-color: white;
+		  }
+		
+		  to {
+		    background-color: #606060;
+		  }
+		}
+	</style>
+	<table class="abc">
+		<colgroup> <col>
+		<colgroup> <col> <col> <col>
+		<thead>
+	 	<tr> <th>
+	 		<% base = 9 %>
+		<%for i in 0..base %>
+		  <% a = Date.today + i %>
+		 	<th style="border-right: 1px solid #707070; border-left: 1px solid #707070;"> <%=a.strftime("%m/%d") %>
+		<% end %>
+
+		<tbody>
+			<% @tasklist.each_with_index do |t,i| %>
+				<% if t.duedate == nil %>
+				<% t.duedate = Date.today %>
+				<% end %>
+			  <tr> <th scope=rowgroup style="border: 1px solid #707070;"> <%=t.taskname%> </th>
+			  <% for j in 0..base %>
+			  	<% a = t.duedate - (Date.today + j) %>
+				  <% if a >= 0 %>
+				  	<td id="<%=i*10+j%>th" style="border-right: 1px dotted #707070; background-color: #606060; animation-duration: 3s; animation-name: slidein;"></td>
+				  	
+				  <% else %>
+				  	<td style="border-right: 1px dotted #707070;"></td>
+				  <% end %>
+			  <% end %>
+			<% end %>
+		</tbody>
+	</table>
+	
+	<li><%=@team.teamname%></li>
+	<% temp = [] %>
+	<% temp += @team.users %>
+	
+	<% temp.each_with_index do |t,idx| %>
+		<button id="<%=idx%>" data-toggle="modal" data-target="#<%=idx%>info"><%=t.id%> <%=t.email%> </button> <p><%=(Time.now - t.last_seen)%> seconds ago</p><br>
+	
+	<div class="modal fade" id="<%=idx%>info" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+	  <div class="modal-dialog modal-sm">
+	    <div class="modal-content">
+			<table class="abc">
+				<colgroup> <col>
+				<colgroup> <col> <col> <col>
+				<thead>
+			 	<tr> <th>
+			 		<% base = 9 %>
+				<%for i in 0..base %>
+				  <% a = Date.today + i %>
+				 	<th style="border-right: 1px solid #707070; border-left: 1px solid #707070;"> <%=a.strftime("%m/%d") %>
+				<% end %>
+		
+				<tbody>
+					<% ro = t.id %>
+					<% @taskindiv = t.tasks.where(:team_id => params[:team]) %>
+					<% @taskindiv.each_with_index do |b,i| %>
+						<% if b.duedate == nil %>
+						<% b.duedate = Date.today %>
+						<% end %>
+					  <tr> <th scope=rowgroup style="border: 1px solid #707070;"> <%=b.taskname%> </th>
+					  <% for j in 0..base %>
+					  	<% a = b.duedate - (Date.today + j) %>
+						  <% if a >= 0 %>
+						  	<td id="<%=i*10+j%>th" style="border-right: 1px dotted #707070; background-color: #606060; animation-duration: 3s; animation-name: slidein;"></td>
+						  	
+						  <% else %>
+						  	<td style="border-right: 1px dotted #707070;"></td>
+						  <% end %>
+					  <% end %>
+					<% end %>
+				</tbody>
+			</table>
+	    </div>
+	  </div>
+	</div>
+	
+	<% end %>
 </body>

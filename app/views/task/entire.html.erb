@@ -1,42 +1,84 @@
 <head>
 	<h1> Entire task viewer </h1>
+	<h2><%=@team.teamname%></h2>
 	<h2> <%=current_user.first_name%><%=current_user.last_name%> <%=current_user.email%> </h2>
-	<%= link_to("Individual", {:action => "index"}) %>
+	
+	<%= link_to "INDIVIDUAL", action: 'show', controller: 'task', team: @team.id%>
 </head>
 
 <body data-no-turbolink="true">
-
-	<% @managelist.each_with_index do |t| %>
-	    <% a = User.find(t.user_id) %>
-		<li> <%=a.first_name%><%=a.last_name%> <%=t.taskname%> <%=t.duedate%> </li>
+	<li> <%= link_to('Logout', destroy_user_session_path, :method => :delete) %> </li>
+	
+	<% @teamtask.each do |t| %>
+		<li> <%=t.taskname%> <%=t.duedate%></li>
 	<% end %>
 	<br>
-	<form action="/task/enroll">
-		<textarea name="irum" placeholder="taskname"></textarea>
-		<textarea name="nalzza" placeholder="duedate"></textarea><br>
-		<input type="submit">
-	</form>
-	<br>
-	<li> <%= link_to('Logout', destroy_user_session_path, :method => :delete) %> </li>
-	<script src="/assets/Chart.js"></script>
-	<!--<script src="/assets/tasklist_index.js"></script>-->
-	<script>
+	
+	<% temp =[] %>
+	<% temp += @team.users %>
+	
+	<style>
+		abc, tr, td{
+			border-bottom: 2px solid #707070;
+		}
+		abc, th {
+    	height: 30px;
+		}
+		abc{
+			 margin=10px;
+		}
 
-	    var labelString = new Array();
-		var dataString = new Array();
-		var barChartData = first(labelString, dataString);
-
-		<% @managelistdesc.each_with_index do |t| %>
-    		var displayday = <%=(t.duedate - Date.today).to_i %>
-    		if(displayday >= 0){
-				barChartData.labels.push("<%=t.taskname%>");
-	    		dataString.push(displayday);
-    		}
+		@keyframes slidein {
+		  from {
+		    background-color: white;
+		  }
+		
+		  to {
+		    background-color: #606060;
+		  }
+		}
+	</style>
+	
+	<table class="abc">
+		<colgroup> <col>
+		<colgroup> <col> <col> <col>
+		<thead>
+	 	<tr> <th>
+	 	<% base = 9 %>
+	 		<th> taskname </th>
+		<% for i in 0..base %>
+		  <% a = Date.today + i %>
+		 	<th style="border-right: 1px solid #707070; border-left: 1px solid #707070;"> <%=a.strftime("%m/%d") %>
 		<% end %>
 
-	  onld(barChartData);
-	</script>
-
-	<canvas id="canvas" width="auto" height="auto"></canvas>
-
+		<tbody>
+			<% temp.each_with_index do |t,idx| %>
+				<% ro = t.id %>
+				<% @taskindiv = t.tasks.where(:team_id => params[:team]).order(duedate: :asc) %>
+				<% if @taskindiv.count != 0 %>
+				<tr> <th rowspan="<%=@taskindiv.count%>"><%=t.first_name%><%=t.last_name%></th>
+				<% end %>
+					
+					<% @taskindiv.each_with_index do |b,i| %>
+						<% if b.duedate == nil %>
+							<% b.duedate = Date.today %>
+						<% end %>
+						
+					  	<td scope=rowgroup style="border: 1px solid #707070;"> <%=b.taskname%> </td>
+					  	
+						  <% for j in 0..base %>
+						  	<% a = b.duedate - (Date.today + j) %>
+							  <% if a >= 0 %>
+							  	<td id="<%=i*10+j%>th" style="border-right: 1px dotted #707070; background-color: #606060; animation-duration: 3s; animation-name: slidein;"></td>
+							  <% else %>
+							  	<td style="border-right: 1px dotted #707070;"></td>
+							  <% end %>
+						  <% end %>
+						</tr>
+					<% end %>
+					
+				</tr>
+			<% end %>
+		</tbody>
+	</table>
 </body>

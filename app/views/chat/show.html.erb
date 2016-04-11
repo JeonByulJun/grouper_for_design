@@ -16,9 +16,7 @@
   <input type="hidden" name="team" value=<%=@team.id%>>
   <br />
   <% @team.users.each do |p| %>
-    <% if p != current_user %>
       <%= p.email %> = <%= check_box_tag('user_ids[]', p.id) %><br />
-    <% end %>
   <% end %>
   <%= hidden_field_tag :authenticity_token, form_authenticity_token -%>
 
@@ -30,9 +28,7 @@
 <form action="/task/create" method="post">
   <p>taskname</p><input type="text" name="taskname">
   <% @team.users.each do |p| %>
-    <% if p != current_user %>
       <%= p.email %> = <%= check_box_tag('user_ids[]', p.id) %><br />
-    <% end %>
   <% end %>
   <%= hidden_field_tag :authenticity_token, form_authenticity_token -%>
   <p>duedate</p><input type="text" name="duedate">

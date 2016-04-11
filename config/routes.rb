@@ -14,6 +14,7 @@ Rails.application.routes.draw do
   post '/message/create' => 'message#create'
   post '/task/create' => 'task#create'
   get '/task/show' => 'task#show'
+  get '/task/entire' => 'task#entire'
   post '/team/create' => 'team#create'
   post '/task/wansungdo_update' => 'task#wansungdo_update'
   put '/whiteboard/update' => 'whiteboard#update'

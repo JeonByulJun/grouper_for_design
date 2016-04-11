@@ -74,6 +74,9 @@ GEM
       responders
       thread_safe (~> 0.1)
       warden (~> 1.2.3)
+    devise_lastseenable (0.0.6)
+      devise
+      rails (>= 3.0.4)
     em-http-request (1.1.3)
       addressable (>= 2.3.4)
       cookiejar (<= 0.3.0)
@@ -215,6 +218,7 @@ DEPENDENCIES
   coffee-rails (~> 4.1.0)
   coffee-script-source (= 1.8.0)
   devise
+  devise_lastseenable
   faye
   jbuilder (~> 2.0)
   jquery-rails
