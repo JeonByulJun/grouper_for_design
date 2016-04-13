@@ -1,7 +1,6 @@
 <head>
 	<h1> task viewer </h1>
 	<h2> <%=current_user.first_name%><%=current_user.last_name%> <%=current_user.email%> </h2>
-	<a href="/task/entire"> entire </a>
 	<%= link_to "ENTIRE", action: 'entire', controller: 'task', team: @team.id%>
 </head>
 <h4>너가 시킨 일</h4>
@@ -33,7 +32,6 @@
     </form>
   </li>
 <% end %>
-
 
 <body data-no-turbolink="true" >
 	<% @tasklist.each do |t| %>
@@ -71,7 +69,147 @@
 		}
 	</script>
 	<button onclick="notifyMe()">Notify me!</button>
+	
+	<style>
+	  /*body{
+	    background: #333;
+	  }*/
+	  /*Centering the gauge*/
+	  .circlegraph{
+	    display: block;
+	    width: 300px;
+	    margin: 100px auto;
+	  }
+	  
+	  /*custiom font for numgers*/
+	  @font-face{
+	    font-family: "bebas";
+	    src: url("http://thecodeplayer.com/uploads/fonts/BebasNeue.otf");
+	  }
+	</style>
+	<canvas id="circlegraph" width="400px" height="400px"></canvas>
+	<script>
+	  window.onload = function(){
+	    //canvas initialization
+	    var canvas = document.getElementById("circlegraph");
+	    var ctx = canvas.getContext("2d");
+	    //dimensions
+	    var W = canvas.width;
+	    var H = canvas.height;
+	    //lets draw a 200degree arc. we need to specify degrees in radians
+	    
+	    //variables
+	    var degrees = 0;
+	    var color = "lightgreen";
+	    var bgcolor = "#222";
+	    var text;
+	    var difference = 0;
+	    var namearr = [];	// t.taskname
+	    var duearr = [];	// t.duedate
+	    var wanarr = [];	// t.wansungdo
+	    var animation_loop, redraw_loop;
+	  
+	    function init(){
+	      //clear the canvas everytime a chart is drawn
+	      ctx.clearRect(0, 0, W, H);
+	      
+	      //Background 360 degree arc
+	      ctx.beginPath();
+	      ctx.strokeStyle = bgcolor;
+	      ctx.lineWidth=30;
+	      //ctx.arc(x,y,radius,start_angle,end_angle,clockwise?);//you can see the arc now
+	      ctx.arc(W/2,H/2,100,0,Math.PI*2,false);
+	      ctx.stroke();
+	      
+	      //gauge will be a simple arc
+	      
+	      //Angle in radians = angle in degrees*PI/180
+	      var radians = degrees*Math.PI/180;
+	      ctx.beginPath();
+	      ctx.strokeStyle = color;
+	      ctx.lineWidth=30;
+	      //ctx.arc(x,y,radius,start_angle,end_angle,clockwise?);//you can see the arc now
+	      
+	      //The arc starts from the right most end. If we deduct 90 degrees from the angles
+	      //the arc will start from the topmost end
+	      ctx.arc(W/2,H/2,100,0-90*Math.PI/180,radians-90*Math.PI/180,false);
+	      ctx.stroke();
+	      
+	      //Lets add the text
+	      ctx.fillStyle = color;
+	      ctx.font = "50px bebas";//"50px arial"
+	      text = Math.floor(degrees/360*100)+ '%';
+	      //Lets center the text
+	      //deducting half of text width from postion x
+	      text_width = ctx.measureText(text).width;
+	      //adding manual value to position y since the height of the text cannot
+	      //be measured easily. there are hacks but we will keep it manual
+	      //ctx.fillText(the_text, x, y)
+	      ctx.fillText(text, W/2-text_width/2, H/2 + 15);
+	    }
+	  
+	    function draw(){
+	    	for( var i=0; i<namearr.length; i++){
+			    degrees = Math.round(wanarr[i]*360/100);
+			    init();
+	    	}
+	    	//new_degrees = Math.round(twan*360);
+	    	//difference = new_degrees - degrees;
+	    }
+	    
+	    //Lets add some animation for fun
+	    function go(){
+		    <% @tasklist.each do |t| %>
+				<% if t.duedate == nil %>
+					<% (t.duedate = Date.today) %>
+				<% end %>
+				<% a = t.duedate - Date.today %>
+				namearr.push("<%=t.taskname%>");
+				duearr.push(<%=a%>);
+				wanarr.push(<%=t.wansungdo%>);
+			<% end %>
+			draw();
+	    }
+	    go();
+	   // redraw_loop = setInterval(draw,2000); //Draw a new chart every 2seconds
+	  }
+	</script>
+	
+	
+	<style>
+		.bar {
+		    background-color: #f2f2f1;
+		    width: 30%;
+		    height: 30px;
+		    margin: 30px;
+		}
+		.bar-inner {
+		  background-color: #2ecc71;
+		  width: 0%;
+		  height: 100%;
+		  position: relative;
+		  transition: width 1250ms linear;
+		}
+		
+		.bar-inner:after {
+		  position: absolute;
+		  right: 5.5%;
+		  content: attr(data-percent);
+		  color: #fff;
+		  font-size: 18px;
+		  font-weight: 700;
+		  line-height: 30px;
+		}
+	</style>
+	<% @tasklistdesc.each do |t| %>
+		<li> <%=t.taskname%> </li>
+		<div class="bar">
+		  		<div class="bar-inner bar-<%=(t.wansungdo).to_i %>" data-percent="<%=(t.wansungdo).to_i %>%"></div>
+		</div>
+	<% end %>
+	<script> horild(); </script>
 
+	<canvas id="canvas" width="auto" height="auto" style="max-width: 1200px; max-height: 500px;" ></canvas>
 	<script>
 		var labelString = new Array();
 		var dataString = new Array();
@@ -86,7 +224,6 @@
 		<% end %>
 		onld(barChartData);
 	</script>
-	<canvas id="canvas" width="auto" height="auto" style="max-width: 1200px; max-height: 500px;" ></canvas>
 	
 	<style>
 		abc, tr, td{
@@ -119,7 +256,6 @@
 		  <% a = Date.today + i %>
 		 	<th style="border-right: 1px solid #707070; border-left: 1px solid #707070;"> <%=a.strftime("%m/%d") %>
 		<% end %>
-
 		<tbody>
 			<% @tasklist.each_with_index do |t,i| %>
 				<% if t.duedate == nil %>
@@ -145,44 +281,43 @@
 	
 	<% temp.each_with_index do |t,idx| %>
 		<button id="<%=idx%>" data-toggle="modal" data-target="#<%=idx%>info"><%=t.id%> <%=t.email%> </button> <p><%=(Time.now - t.last_seen)%> seconds ago</p><br>
-	
-	<div class="modal fade" id="<%=idx%>info" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
-	  <div class="modal-dialog modal-sm">
-	    <div class="modal-content">
-			<table class="abc">
-				<colgroup> <col>
-				<colgroup> <col> <col> <col>
-				<thead>
-			 	<tr> <th>
-			 		<% base = 9 %>
-				<%for i in 0..base %>
-				  <% a = Date.today + i %>
-				 	<th style="border-right: 1px solid #707070; border-left: 1px solid #707070;"> <%=a.strftime("%m/%d") %>
-				<% end %>
 		
-				<tbody>
-					<% ro = t.id %>
-					<% @taskindiv = t.tasks.where(:team_id => params[:team]) %>
-					<% @taskindiv.each_with_index do |b,i| %>
-						<% if b.duedate == nil %>
-						<% b.duedate = Date.today %>
-						<% end %>
-					  <tr> <th scope=rowgroup style="border: 1px solid #707070;"> <%=b.taskname%> </th>
-					  <% for j in 0..base %>
-					  	<% a = b.duedate - (Date.today + j) %>
-						  <% if a >= 0 %>
-						  	<td id="<%=i*10+j%>th" style="border-right: 1px dotted #707070; background-color: #606060; animation-duration: 3s; animation-name: slidein;"></td>
-						  	
-						  <% else %>
-						  	<td style="border-right: 1px dotted #707070;"></td>
-						  <% end %>
-					  <% end %>
+		<div class="modal fade" id="<%=idx%>info" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel">
+		  <div class="modal-dialog modal-sm">
+		    <div class="modal-content">
+				<table class="abc">
+					<colgroup> <col>
+					<colgroup> <col> <col> <col>
+					<thead>
+				 	<tr> <th>
+				 		<% base = 9 %>
+					<%for i in 0..base %>
+					  <% a = Date.today + i %>
+					 	<th style="border-right: 1px solid #707070; border-left: 1px solid #707070;"> <%=a.strftime("%m/%d") %>
 					<% end %>
-				</tbody>
-			</table>
-	    </div>
-	  </div>
-	</div>
-	
+			
+					<tbody>
+						<% ro = t.id %>
+						<% @taskindiv = t.tasks.where(:team_id => params[:team]) %>
+						<% @taskindiv.each_with_index do |b,i| %>
+							<% if b.duedate == nil %>
+							<% b.duedate = Date.today %>
+							<% end %>
+						  <tr> <th scope=rowgroup style="border: 1px solid #707070;"> <%=b.taskname%> </th>
+						  <% for j in 0..base %>
+						  	<% a = b.duedate - (Date.today + j) %>
+							  <% if a >= 0 %>
+							  	<td id="<%=i*10+j%>th" style="border-right: 1px dotted #707070; background-color: #606060; animation-duration: 3s; animation-name: slidein;"></td>
+							  	
+							  <% else %>
+							  	<td style="border-right: 1px dotted #707070;"></td>
+							  <% end %>
+						  <% end %>
+						<% end %>
+					</tbody>
+				</table>
+		    </div>
+		  </div>
+		</div>
 	<% end %>
 </body>
