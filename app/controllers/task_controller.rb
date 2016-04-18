@@ -30,6 +30,8 @@ class TaskController < ApplicationController
   def wansungdo_update
     @task = Task.find(params[:task_id])
     @task.wansungdo = params[:wansungdo]
+    @comment = Comment.create(task_id: params[:task_id], wansungdo_log: params[:wansungdo], comment_log: params[:comment])
+    @task.comments << @comment
     if @task.save
       redirect_to action: 'show', team: params[:team_id]
     end

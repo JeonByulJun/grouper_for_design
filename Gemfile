@@ -1,5 +1,8 @@
 source 'https://rubygems.org'
 
+# bootstrap slider for rails
+#gem 'bootstrap-slider-rails'
+# Last seenable, displayed as few seconds ago
 gem 'devise_lastseenable'
 # Chart.js
 gem 'chart-js-rails'

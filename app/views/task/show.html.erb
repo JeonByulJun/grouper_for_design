@@ -13,7 +13,7 @@
 <% end %>
 
 <h4>너가 할 일</h4>
-<% @taskdo.each do |taskdo| %>
+<% @taskdo.each_with_index do |taskdo,slideridx| %>
   <li>
     <p>name = <%=taskdo.taskname%></p>
     <p>
@@ -25,7 +25,15 @@
     <form action="/task/wansungdo_update" method="post">
     	<input type="hidden" name="task_id" value="<%=taskdo.id%>">
     	<input type="hidden" name="team_id" value="<%=taskdo.team_id%>">
-    	<textarea name="wansungdo"> <%= taskdo.wansungdo %> </textarea>
+       	<input id="sl<%=slideridx%>" name="wansungdo" type="text" data-slider-value="<%= taskdo.wansungdo %>" data-slider-ticks="[0,10, 20,30, 40,50, 60,70, 80,90, 100]" data-slider-ticks-snap-bounds="30" data-slider-ticks-labels='['0%','', '20%','', '40%','', '60%','', '80%','', '100%']'/>
+		<script>
+		var slider = new Slider("#sl<%=slideridx%>", {
+		    ticks: [0,10, 20,30, 40,50, 60,70, 80,90, 100],
+		    ticks_labels: ['0%','', '20%','', '40%','', '60%','', '80%','', '100%'],
+		    ticks_snap_bounds: 30
+		});
+		</script>
+		<textarea type="text" name="comment"></textarea>
     	<%= hidden_field_tag :authenticity_token, form_authenticity_token -%>
 
     	<input type="submit" value="수정">
@@ -116,7 +124,7 @@
 	      //Background 360 degree arc
 	      ctx.beginPath();
 	      ctx.strokeStyle = bgcolor;
-	      ctx.lineWidth=30;
+	      ctx.lineWidth = 29;
 	      //ctx.arc(x,y,radius,start_angle,end_angle,clockwise?);//you can see the arc now
 	      ctx.arc(W/2,H/2,100,0,Math.PI*2,false);
 	      ctx.stroke();
@@ -274,6 +282,38 @@
 			<% end %>
 		</tbody>
 	</table>
+	
+	<li> taskname </li>
+	<% @tasklist.each_with_index do |t,i| %>
+		<% if t.duedate == nil %>
+		<% t.duedate = Date.today %>
+		<% end %>
+		<% a = t.duedate - (Date.today) %>
+		<% if a >= 7 %>
+		<% b = 100 %>
+		<% else %>
+		<% b = (a * 100 / 7).to_i %>
+		<% end %>
+	<div class="bar">
+  		<div class="bar-inner bar-<%=b%>" data-percent="<%=b%>%" data-date="<%=a%>"></div>
+	</div>
+	<script>
+	    function ganttfn(){
+	        (function(document) {
+	          var _bars = [].slice.call(document.querySelectorAll('.bar-inner'));
+	          _bars.map(function(bar, index) {
+	            setTimeout(function() {
+	            	bar.style.width = bar.dataset.percent;
+	            	bar.style.content = bar.dataset.date;
+	            }, 1);
+	            
+	          });
+	        })(document)
+	    }
+	    ganttfn();
+  	</script>
+  	<% end %>
+	
 	
 	<li><%=@team.teamname%></li>
 	<% temp = [] %>

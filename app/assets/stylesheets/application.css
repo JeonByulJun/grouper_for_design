@@ -10,31 +10,7 @@
  * defined in the other CSS/SCSS files in this directory. It is generally better to create a new
  * file per style scope.
  *
+ *= require bootstrap-slider
  *= require_tree .
  *= require_self
  */
- 
- 
-    .bar {
-	    background-color: #f2f2f1;
-	    width: 30%;
-	    height: 30px;
-	    margin: 30px;
-	}
-	.bar-inner {
-	  background-color: #2ecc71;
-	  width: 0%;
-	  height: 100%;
-	  position: relative;
-	  transition: width 2500ms linear;
-	}
-	
-	.bar-inner:after {
-	  position: absolute;
-	  right: 5.5%;
-	  content: attr(data-percent);
-	  color: #fff;
-	  font-size: 18px;
-	  font-weight: 700;
-	  line-height: 30px;
-	}
