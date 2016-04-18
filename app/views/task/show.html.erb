@@ -3,45 +3,287 @@
 	<h2> <%=current_user.first_name%><%=current_user.last_name%> <%=current_user.email%> </h2>
 	<%= link_to "ENTIRE", action: 'entire', controller: 'task', team: @team.id%>
 </head>
-<h4>너가 시킨 일</h4>
-<% @tasksend.each do |tasksend| %>
-  <li> name = <%=tasksend.taskname%> due = <%=tasksend.duedate%> 완성도 = <%=tasksend.wansungdo%>
-    <% tasksend.users.each do |user| %>
-      <p>하는사람 = <%=user.email%></p>
-    <% end %>
-  </li>
-<% end %>
 
-<h4>너가 할 일</h4>
-<% @taskdo.each_with_index do |taskdo,slideridx| %>
-  <li>
-    <p>name = <%=taskdo.taskname%></p>
-    <p>
-      시킨놈 =
-      <%sender = User.find(taskdo.sender)%>
-      <%=sender.email%>
-    </p>
-    <p>due = <%=taskdo.duedate%></p>
-    <form action="/task/wansungdo_update" method="post">
-    	<input type="hidden" name="task_id" value="<%=taskdo.id%>">
-    	<input type="hidden" name="team_id" value="<%=taskdo.team_id%>">
-       	<input id="sl<%=slideridx%>" name="wansungdo" type="text" data-slider-value="<%= taskdo.wansungdo %>" data-slider-ticks="[0,10, 20,30, 40,50, 60,70, 80,90, 100]" data-slider-ticks-snap-bounds="30" data-slider-ticks-labels='['0%','', '20%','', '40%','', '60%','', '80%','', '100%']'/>
-		<script>
-		var slider = new Slider("#sl<%=slideridx%>", {
-		    ticks: [0,10, 20,30, 40,50, 60,70, 80,90, 100],
-		    ticks_labels: ['0%','', '20%','', '40%','', '60%','', '80%','', '100%'],
-		    ticks_snap_bounds: 30
-		});
-		</script>
-		<textarea type="text" name="comment"></textarea>
-    	<%= hidden_field_tag :authenticity_token, form_authenticity_token -%>
-
-    	<input type="submit" value="수정">
-    </form>
-  </li>
-<% end %>
 
 <body data-no-turbolink="true" >
+	<div class="row">
+		<!--Average Completion-->
+		<div class="col-md-4">
+			<!--Circle Graph-->
+			<style>
+			  /*Centering the gauge*/
+			  .circlegraph{
+			    display: block;
+			    width: 300px;
+			    margin: 100px auto;
+			  }
+			  
+			  /*custiom font for numgers*/
+			  @font-face{
+			    font-family: "bebas";
+			    src: url("http://thecodeplayer.com/uploads/fonts/BebasNeue.otf");
+			  }
+			</style>
+			<canvas id="circlegraph" width="400px" height="400px"></canvas>
+			<% sum = 0 %>
+			<% @tasklist.each do |t| %>
+				<% sum += (t.wansungdo).to_i %>
+			<% end %>
+			<script>
+				function abc(){
+				    //canvas initialization
+				    var canvas = document.getElementById("circlegraph");
+				    var ctx = canvas.getContext("2d");
+				    //dimensions
+				    var W = canvas.width;
+				    var H = canvas.height;
+				    //lets draw a 200degree arc. we need to specify degrees in radians
+				    
+				    //variables
+				    var degrees = 0;
+				    var color = "lightgreen";
+				    var bgcolor = "#F3F3F3";
+				    var text;
+				    var difference = 0;
+				    var animation_loop, redraw_loop;
+				  
+				    function init(){
+				      //clear the canvas everytime a chart is drawn
+				      ctx.clearRect(0, 0, W, H);
+				      
+				      //Background 360 degree arc
+				      ctx.beginPath();
+				      ctx.strokeStyle= bgcolor;
+				      ctx.lineWidth=29;
+				      //ctx.arc(x,y,radius,start_angle,end_angle,clockwise?);//you can see the arc now
+				      ctx.arc(W/2,H/2,100,0,Math.PI*2,false);
+				      ctx.stroke();
+				      
+				      //gauge will be a simple arc
+				      
+				      //Angle in radians = angle in degrees*PI/180
+				      var radians = degrees*Math.PI/180;
+				      ctx.beginPath();
+				      ctx.strokeStyle = color;
+				      ctx.lineWidth=30;
+				      //ctx.arc(x,y,radius,start_angle,end_angle,clockwise?);//you can see the arc now
+				      
+				      //The arc starts from the right most end. If we deduct 90 degrees from the angles
+				      //the arc will start from the topmost end
+				      ctx.arc(W/2,H/2,100,0-90*Math.PI/180,radians-90*Math.PI/180,false);
+				      ctx.stroke();
+				      
+				      //Lets add the text
+				      ctx.fillStyle = color;
+				      ctx.font = "50px bebas";//"50px arial"
+				      text = Math.floor(degrees/360*100)+ '%';
+				      //Lets center the text
+				      //deducting half of text width from postion x
+				      text_width = ctx.measureText(text).width;
+				      //adding manual value to position y since the height of the text cannot
+				      //be measured easily. there are hacks but we will keep it manual
+				      //ctx.fillText(the_text, x, y)
+				      ctx.fillText(text, W/2-text_width/2, H/2 + 15);
+				      ctx.font = "20px bebas";
+				      text = 'Average Completion';
+				      text_width = ctx.measureText(text).width;
+				      ctx.fillText(text, W/2-text_width/2, 0.3*H/2);
+				    }
+				  
+				    function draw(arrival){
+				      //cancel any movement animation if a new chart is requested
+				      if(typeof animation_loop != undefined)
+				        clearInterval(animation_loop);
+				      //lets draw a 200 degree arc. we need to specify degrees in radians
+				      new_degrees = arrival*360/100;
+				      difference = new_degrees - degrees;
+				      //This will animate the gauge to new positions
+				      //The animation will take 1 second
+				      //
+				      setTimeout(function(){ },7000);
+				      animation_loop = setInterval(animate_to,1000/difference);
+				    }
+				    
+				    //function to make the chart move to new degrees
+				    function animate_to(){
+				      //if(degrees == new_degrees)  //clear animation loop if degrees reaches to new_degrees
+				      //  clearInterval(animation_loop);
+				      if(degrees < new_degrees)
+				        degrees++;
+				      else
+				        clearInterval(animation_loop);
+				      //else
+				      //  degrees--;
+				      
+				      init();
+				    }
+				    
+				    draw(<%=(sum/@tasklist.count)%>);
+				    //redraw_loop = setInterval(draw,2000); //Draw a new chart every 2seconds
+				  }
+				function addLoadEvent(func) {
+				    var oldonload = window.onload;
+				      if(typeof window.onload != 'function') {
+				          window.onload = func;
+				      } else {
+				          window.onload = function() {
+				              oldonload();
+				              func();
+				      }
+				  }
+				}
+			  	addLoadEvent(abc);
+			</script>
+		</div>
+		<div class="col-md-8">
+		<canvas id="canvas" style="width: auto; height: auto;">
+			<script>
+				var labelString = new Array();
+				var dataString = new Array();
+				var barChartData = first(labelString, dataString);
+		
+				<% @tasklistdesc.each_with_index do |t,idx| %>
+					var displayday = <%=(t.wansungdo).to_i %>
+					if(displayday >= 0){
+					barChartData.labels.push("<%=((Date.today) - ( 5 - idx )).strftime("%m.%d")%>");
+						dataString.push(displayday);
+					}
+				<% end %>
+				onld(barChartData);
+			</script>
+		</canvas>
+		</div>
+	</div>
+	
+	<br>
+	
+	<div class="row" style="background-color: #F3F3F3; padding-left: 10px;">
+		<style>
+			.bar2 {
+			    background-color: #F3F3F3; /*gray*/
+			    width: 70%;
+			    /*height: 30px;*/
+			    height: 40px;
+			    /*border-left-style: dotted;
+			    border-left-color: black;
+			    border-left-width: thin;
+			    border-top-style: dotted;
+			    border-top-color: black;
+			    border-top-width: thin;*/
+			}
+			.bar2-innertask:after{
+			    position: absolute;
+				right: 5.5%;
+				color: #0C0C0C;
+				content: attr(data-task);
+				font-size: 18px;
+				font-weight: 700;
+				line-height: 30px;
+			}
+			.bar-innerday {
+				background-color: #00B0F0; /*slight deep blue*/
+				width: 0%;
+				/*height: 100%;*/
+				height: 30px;
+				top: 5px;
+				position: relative;
+				transition: width 1250ms linear;
+			}
+			
+			.bar-innerday:after {
+				position: absolute;
+				right: 5.5%;
+				color: #fff; /*white*/
+				content: attr(data-display);
+				font-size: 18px;
+				font-weight: 700;
+				line-height: 30px;
+			}
+		</style>
+		<!-- gantt head -->
+		<div class="bar2">
+			<%for i in 0..11 %>
+				<% a = Date.today + i %>
+				<div class="col-md-1"><%=a.strftime("%m/%d") %></div>
+			<% end %>
+		</div>
+		<% @tasklist.each_with_index do |t,i| %>
+			<% if t.duedate == nil %>
+			<% t.duedate = Date.today %>
+			<% end %>
+			<% a = (t.duedate - (Date.today)).to_i %>
+			<% if a >0 %>
+				<div class="bar2">
+					<div class="bar2-innertask" data-task ="<%=t.taskname%>"></div>
+			  		<div id="<%=i%>th-gantt" class="bar-innerday bar-<%=a%>" data-date="<%=a%>" data-display ="D-<%=a%>"></div>
+				</div>
+			<% end %>
+	  	<% end %>
+		<script>
+		    function ganttfn(){
+		        (function(document) {
+		          var _bars = [].slice.call(document.querySelectorAll('.bar-innerday'));
+		          _bars.map(function(bar, index) {
+		            setTimeout(function() {
+		              var b = bar.dataset.date * 100/12;
+		              if(b>=99){
+		              	b=99;
+		              }
+		              b+="%";
+		              bar.style.width = b;
+		            }, 1);
+		          });
+		        })(document)
+		    }
+		    ganttfn();
+	  	</script>
+	</div>
+	<div class="row">
+		<div class="col-md-6">
+			<h4>너가 할 일</h4>
+			<% @taskdo.each_with_index do |taskdo,slideridx| %>
+			  <li>
+			    <p>name = <%=taskdo.taskname%></p>
+			    <p>
+			      시킨놈 =
+			      <%sender = User.find(taskdo.sender)%>
+			      <%=sender.email%>
+			    </p>
+			    <p>due = <%=taskdo.duedate%></p>
+			    <form action="/task/wansungdo_update" method="post">
+			    	<input type="hidden" name="task_id" value="<%=taskdo.id%>">
+			    	<input type="hidden" name="team_id" value="<%=taskdo.team_id%>">
+			       	<input id="sl<%=slideridx%>" name="wansungdo" type="text" data-slider-value="<%= taskdo.wansungdo %>" data-slider-ticks="[0,10, 20,30, 40,50, 60,70, 80,90, 100]" data-slider-ticks-snap-bounds="30" data-slider-ticks-labels='['0%','', '20%','', '40%','', '60%','', '80%','', '100%']'/>
+					<script>
+					var slider = new Slider("#sl<%=slideridx%>", {
+					    ticks: [0,10, 20,30, 40,50, 60,70, 80,90, 100],
+					    ticks_labels: ['0%','', '20%','', '40%','', '60%','', '80%','', '100%'],
+					    ticks_snap_bounds: 30
+					});
+					</script>
+					<textarea type="text" name="comment"></textarea>
+			    	<%= hidden_field_tag :authenticity_token, form_authenticity_token -%>
+			
+			    	<input type="submit" value="수정">
+			    </form>
+			  </li>
+			<% end %>
+		</div>
+		<div class="col-md-6">
+			<h4>너가 시킨 일</h4>
+			<% @tasksend.each do |tasksend| %>
+			  <li> name = <%=tasksend.taskname%> due = <%=tasksend.duedate%> 완성도 = <%=tasksend.wansungdo%>
+			    <% tasksend.users.each do |user| %>
+			      <p>하는사람 = <%=user.email%></p>
+			    <% end %>
+			  </li>
+			<% end %>
+		</div>
+	</div>
+	
+	
+	
+	
 	<% @tasklist.each do |t| %>
 		<li> <%=t.taskname%> <%=t.duedate%> <%=t.wansungdo%></li>
 	<% end %>
@@ -78,110 +320,6 @@
 	</script>
 	<button onclick="notifyMe()">Notify me!</button>
 	
-	<style>
-	  /*body{
-	    background: #333;
-	  }*/
-	  /*Centering the gauge*/
-	  .circlegraph{
-	    display: block;
-	    width: 300px;
-	    margin: 100px auto;
-	  }
-	  
-	  /*custiom font for numgers*/
-	  @font-face{
-	    font-family: "bebas";
-	    src: url("http://thecodeplayer.com/uploads/fonts/BebasNeue.otf");
-	  }
-	</style>
-	<canvas id="circlegraph" width="400px" height="400px"></canvas>
-	<script>
-	  window.onload = function(){
-	    //canvas initialization
-	    var canvas = document.getElementById("circlegraph");
-	    var ctx = canvas.getContext("2d");
-	    //dimensions
-	    var W = canvas.width;
-	    var H = canvas.height;
-	    //lets draw a 200degree arc. we need to specify degrees in radians
-	    
-	    //variables
-	    var degrees = 0;
-	    var color = "lightgreen";
-	    var bgcolor = "#222";
-	    var text;
-	    var difference = 0;
-	    var namearr = [];	// t.taskname
-	    var duearr = [];	// t.duedate
-	    var wanarr = [];	// t.wansungdo
-	    var animation_loop, redraw_loop;
-	  
-	    function init(){
-	      //clear the canvas everytime a chart is drawn
-	      ctx.clearRect(0, 0, W, H);
-	      
-	      //Background 360 degree arc
-	      ctx.beginPath();
-	      ctx.strokeStyle = bgcolor;
-	      ctx.lineWidth = 29;
-	      //ctx.arc(x,y,radius,start_angle,end_angle,clockwise?);//you can see the arc now
-	      ctx.arc(W/2,H/2,100,0,Math.PI*2,false);
-	      ctx.stroke();
-	      
-	      //gauge will be a simple arc
-	      
-	      //Angle in radians = angle in degrees*PI/180
-	      var radians = degrees*Math.PI/180;
-	      ctx.beginPath();
-	      ctx.strokeStyle = color;
-	      ctx.lineWidth=30;
-	      //ctx.arc(x,y,radius,start_angle,end_angle,clockwise?);//you can see the arc now
-	      
-	      //The arc starts from the right most end. If we deduct 90 degrees from the angles
-	      //the arc will start from the topmost end
-	      ctx.arc(W/2,H/2,100,0-90*Math.PI/180,radians-90*Math.PI/180,false);
-	      ctx.stroke();
-	      
-	      //Lets add the text
-	      ctx.fillStyle = color;
-	      ctx.font = "50px bebas";//"50px arial"
-	      text = Math.floor(degrees/360*100)+ '%';
-	      //Lets center the text
-	      //deducting half of text width from postion x
-	      text_width = ctx.measureText(text).width;
-	      //adding manual value to position y since the height of the text cannot
-	      //be measured easily. there are hacks but we will keep it manual
-	      //ctx.fillText(the_text, x, y)
-	      ctx.fillText(text, W/2-text_width/2, H/2 + 15);
-	    }
-	  
-	    function draw(){
-	    	for( var i=0; i<namearr.length; i++){
-			    degrees = Math.round(wanarr[i]*360/100);
-			    init();
-	    	}
-	    	//new_degrees = Math.round(twan*360);
-	    	//difference = new_degrees - degrees;
-	    }
-	    
-	    //Lets add some animation for fun
-	    function go(){
-		    <% @tasklist.each do |t| %>
-				<% if t.duedate == nil %>
-					<% (t.duedate = Date.today) %>
-				<% end %>
-				<% a = t.duedate - Date.today %>
-				namearr.push("<%=t.taskname%>");
-				duearr.push(<%=a%>);
-				wanarr.push(<%=t.wansungdo%>);
-			<% end %>
-			draw();
-	    }
-	    go();
-	   // redraw_loop = setInterval(draw,2000); //Draw a new chart every 2seconds
-	  }
-	</script>
 	
 	
 	<style>
@@ -209,29 +347,15 @@
 		  line-height: 30px;
 		}
 	</style>
-	<% @tasklistdesc.each do |t| %>
+	<% @tasklist.each do |t| %>
 		<li> <%=t.taskname%> </li>
 		<div class="bar">
-		  		<div class="bar-inner bar-<%=(t.wansungdo).to_i %>" data-percent="<%=(t.wansungdo).to_i %>%"></div>
+		  	<div class="bar-inner bar-<%=(t.wansungdo).to_i %>" data-percent="<%=(t.wansungdo).to_i %>%"></div>
 		</div>
 	<% end %>
 	<script> horild(); </script>
 
-	<canvas id="canvas" width="auto" height="auto" style="max-width: 1200px; max-height: 500px;" ></canvas>
-	<script>
-		var labelString = new Array();
-		var dataString = new Array();
-		var barChartData = first(labelString, dataString);
-
-		<% @tasklistdesc.each do |t| %>
-				var displayday = <%=(t.wansungdo).to_i %>
-				if(displayday >= 0){
-				barChartData.labels.push("<%=t.taskname%>");
-					dataString.push(displayday);
-				}
-		<% end %>
-		onld(barChartData);
-	</script>
+	
 	
 	<style>
 		abc, tr, td{
@@ -283,36 +407,7 @@
 		</tbody>
 	</table>
 	
-	<li> taskname </li>
-	<% @tasklist.each_with_index do |t,i| %>
-		<% if t.duedate == nil %>
-		<% t.duedate = Date.today %>
-		<% end %>
-		<% a = t.duedate - (Date.today) %>
-		<% if a >= 7 %>
-		<% b = 100 %>
-		<% else %>
-		<% b = (a * 100 / 7).to_i %>
-		<% end %>
-	<div class="bar">
-  		<div class="bar-inner bar-<%=b%>" data-percent="<%=b%>%" data-date="<%=a%>"></div>
-	</div>
-	<script>
-	    function ganttfn(){
-	        (function(document) {
-	          var _bars = [].slice.call(document.querySelectorAll('.bar-inner'));
-	          _bars.map(function(bar, index) {
-	            setTimeout(function() {
-	            	bar.style.width = bar.dataset.percent;
-	            	bar.style.content = bar.dataset.date;
-	            }, 1);
-	            
-	          });
-	        })(document)
-	    }
-	    ganttfn();
-  	</script>
-  	<% end %>
+	
 	
 	
 	<li><%=@team.teamname%></li>

@@ -16,10 +16,10 @@ function first(labelString, dataString){
   	return barChartData;
 };
 
-function onld(barChartData){
+function onld(lineChartData){
     $(document).ready(function(){
   		var ctx = document.getElementById("canvas").getContext("2d");
-    	var chart = new Chart(ctx).HorizontalBar(barChartData, {
+    	var chart = new Chart(ctx).Line(lineChartData, {
   			responsive: false,
   			scaleFontSize: 17,
   			tooltipEvents: ["mousemove", "touchstart", "touchmove"]
